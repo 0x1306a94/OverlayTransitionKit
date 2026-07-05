@@ -93,6 +93,15 @@ private func clearChildOverlayAdapterReferences(_ adapter: ChildOverlayPresentat
 
 @MainActor
 public extension UIViewController {
+    /// Presents a full-screen overlay using UIKit's presentation system.
+    ///
+    /// Use this method when the overlay should participate in UIKit modal
+    /// presentation and dismissal. The overlay view controller provides its
+    /// show and hide animations by conforming to `OverlayTransitionDelegate`.
+    ///
+    /// - Parameters:
+    ///   - viewController: The overlay view controller to present.
+    ///   - completion: The block to execute after the presentation finishes.
     @objc(otk_presentOverlay:completion:)
     func presentOverlay(_ viewController: UIViewController & OverlayTransitionDelegate, completion: (() -> Void)? = nil) {
         let adapter = OverlayPresentationAdapter(delegate: viewController)
@@ -103,6 +112,16 @@ public extension UIViewController {
         present(viewController, animated: true, completion: completion)
     }
 
+    /// Shows a full-screen overlay as a child view controller.
+    ///
+    /// Use this method when the overlay should stay inside the current view
+    /// controller hierarchy instead of using UIKit modal presentation. The
+    /// visual transition is driven by the same `OverlayTransitionDelegate`
+    /// methods used by `presentOverlay(_:completion:)`.
+    ///
+    /// - Parameters:
+    ///   - viewController: The overlay view controller to add as a child.
+    ///   - completion: The block to execute after the show transition finishes.
     @objc(otk_showChildOverlay:completion:)
     func showChildOverlay(_ viewController: UIViewController & OverlayTransitionDelegate, completion: (() -> Void)? = nil) {
         if let adapter = childOverlayTargetAdapter(for: viewController), adapter.parentViewController === self {
@@ -123,6 +142,13 @@ public extension UIViewController {
         }
     }
 
+    /// Dismisses the current child overlay.
+    ///
+    /// When called on a parent view controller, this dismisses the latest child
+    /// overlay shown by that parent. When called on an overlay view controller,
+    /// this dismisses the overlay itself.
+    ///
+    /// - Parameter completion: The block to execute after the dismissal finishes.
     @objc(otk_dismissChildOverlay:)
     func dismissChildOverlay(completion: (() -> Void)? = nil) {
         guard let adapter = lastChildOverlayParentAdapter(for: self) ?? childOverlayTargetAdapter(for: self) else {
@@ -138,6 +164,14 @@ public extension UIViewController {
         }
     }
 
+    /// Dismisses a specific child overlay from the receiver.
+    ///
+    /// Use this method when the parent view controller manages more than one
+    /// child overlay and the target overlay is known.
+    ///
+    /// - Parameters:
+    ///   - viewController: The child overlay view controller to dismiss.
+    ///   - completion: The block to execute after the dismissal finishes.
     @objc(otk_dismissChildOverlay:completion:)
     func dismissChildOverlay(_ viewController: UIViewController, completion: (() -> Void)? = nil) {
         guard let adapter = childOverlayParentAdapter(for: viewController, in: self) else {
